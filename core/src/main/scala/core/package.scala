@@ -1,3 +1,5 @@
+package patrimonium
+
 import java.net.URL
 import java.time.Instant
 
@@ -36,6 +38,7 @@ package object core {
       this.data compareTo that.data
   }
 
+  // FIXME: rename?
   case class CotacaoIntraday(
     val acao: Acao,
     data: Instant,

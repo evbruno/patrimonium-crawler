@@ -1,6 +1,8 @@
+package patrimonium
+
 import org.jsoup.select.Elements
 
-package object crawlers {
+package object crawler {
 
   import scala.collection.JavaConverters._
 

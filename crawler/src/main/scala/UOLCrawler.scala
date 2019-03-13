@@ -1,44 +1,31 @@
-package crawlers
+package patrimonium.crawler
 
 import com.themillhousegroup.scoup.Scoup
-import core.CrawlingServices.{ GetAcoes, GetCotacoesIntraday }
-import core._
 import java.net.URL
-import java.time.format.DateTimeFormatter
+import java.time.chrono.Chronology
+import java.time.format.{ DateTimeFormatter, DateTimeFormatterBuilder }
+import java.time.temporal.ChronoField
 import java.time.{ Instant, ZoneId }
 import org.jsoup.nodes.Element
-import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext }
-
-object UOLCrawlerApp extends App {
-
-  import ExecutionContext.Implicits.global
-  import UOLCrawlerServices._
-
-  val timeout = 10 minutes
-
-  val acoesFuture = new GetAcoesCmd().query
-  val acoes = Await.result(acoesFuture, timeout)
-
-  println(s">> total acoes: ${acoes.size}")
-  acoes.sorted.foreach(println)
-
-  val ticker = acoes find(_.ticker == "TUPY3.SA") getOrElse Acao("TUPY3.SA", "Tupy")
-  val cotacoesFuture = new GetCotacoesIntradayCmd(ticker).query
-  val cotacoes = Await.result(cotacoesFuture, timeout)
-
-  println(s">> total cotacoes intraday: ${cotacoes.size}")
-  cotacoes.sorted.foreach(println)
-}
+import patrimonium.core.CrawlingServices._
+import patrimonium.core._
+import scala.concurrent.ExecutionContext
 
 object UOLCrawlerServices {
 
   private val baseURL = "http://cotacoes.economia.uol.com.br"
   private val listagem = s"$baseURL/acoes-bovespa.html?exchangeCode=.BVSP&page=1&size=2000"
   private val intraday = s"$baseURL/acao/cotacoes-diarias.html?codigo=%s&size=2000&page=1"
+  private val historico = s"$baseURL/acao/cotacoes-historicas.html?codigo=%s&size=365&page=1&period="
 
-  private lazy val formatter = DateTimeFormatter
+  private lazy val dateTimeFmt = DateTimeFormatter
     .ofPattern("d/M/yyyy H:mm")
+    .withZone(ZoneId.of("UTC"))
+
+  private lazy val dateFmt = new DateTimeFormatterBuilder()
+    .appendPattern("d/M/yyyy")
+    .parseDefaulting(ChronoField.SECOND_OF_DAY, 0)
+    .toFormatter()
     .withZone(ZoneId.of("UTC"))
 
   private implicit def elementToDouble(el: Element) =
@@ -48,7 +35,10 @@ object UOLCrawlerServices {
     el.html.replace(".", "").toLong
 
   private implicit def elementToInstant(el: Element) =
-    Instant.from(formatter.parse(el.html))
+    if (el.html.contains(" :"))
+      Instant.from(dateTimeFmt.parse(el.html))
+    else
+      Instant.from(dateFmt.parse(el.html))
 
   class GetAcoesCmd extends GetAcoes {
 
@@ -70,6 +60,19 @@ object UOLCrawlerServices {
       Scoup parse (url) map {
         _ select ("table#tblIntraday") flatMap {
           _ select ("tbody tr") map rowToCotacaoIntraday(acao)
+        }
+      }
+    }
+
+  }
+
+  class GetCotacoesInterdayCmd(val acao: Acao) extends GetHistoricoDiario {
+
+    override def query(implicit ec: ExecutionContext) = {
+      val url = historico.format(acao.ticker)
+      Scoup parse (url) map {
+        _ select ("table#tblInterday") flatMap {
+          _ select ("tbody tr") map rowToCotacaoInterday(acao)
         }
       }
     }
@@ -100,6 +103,19 @@ object UOLCrawlerServices {
       variacao = td.get(2),
       maximo = td.get(4),
       minimo = td.get(5),
+      volume = td.get(6)
+    )
+  }
+
+  private def rowToCotacaoInterday(acao: Acao)(row: Element) = {
+    val td = row.select("td")
+
+    CotacaoIntraday(acao,
+      data = td.get(0),
+      preco = td.get(1),
+      variacao = td.get(4),
+      maximo = td.get(3),
+      minimo = td.get(2),
       volume = td.get(6)
     )
   }

@@ -1,4 +1,4 @@
-package core
+package patrimonium.core
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -15,6 +15,10 @@ object CrawlingServices {
   trait GetCotacaoDiaAnterior extends GetCommand[Cotacao]
 
   trait GetCotacoesIntraday extends GetCommand[Seq[_ <: CotacaoIntraday]] {
+    val acao: Acao
+  }
+
+  trait GetHistoricoDiario extends GetCommand[Seq[_ <: CotacaoIntraday]] {
     val acao: Acao
   }
 
