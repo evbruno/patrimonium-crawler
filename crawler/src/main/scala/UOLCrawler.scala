@@ -66,7 +66,7 @@ object UOLCrawlerServices {
 
   }
 
-  class GetCotacoesInterdayCmd(val acao: Acao) extends GetHistoricoDiario {
+  class GetCotacoesInterdayCmd(val acao: Acao) extends GetCotacoesInterday {
 
     override def query(implicit ec: ExecutionContext) = {
       val url = historico.format(acao.ticker)
@@ -97,7 +97,7 @@ object UOLCrawlerServices {
   private def rowToCotacaoIntraday(acao: Acao)(row: Element) = {
     val td = row.select("td")
 
-    CotacaoIntraday(acao,
+    Cotacao(acao,
       data = td.get(0),
       preco = td.get(1),
       variacao = td.get(2),
@@ -110,7 +110,7 @@ object UOLCrawlerServices {
   private def rowToCotacaoInterday(acao: Acao)(row: Element) = {
     val td = row.select("td")
 
-    CotacaoIntraday(acao,
+    Cotacao(acao,
       data = td.get(0),
       preco = td.get(1),
       variacao = td.get(4),

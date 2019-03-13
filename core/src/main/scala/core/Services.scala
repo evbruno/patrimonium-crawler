@@ -12,13 +12,11 @@ object CrawlingServices {
 
   trait GetAcoes extends GetCommand[Seq[_ <: Acao]]
 
-  trait GetCotacaoDiaAnterior extends GetCommand[Cotacao]
-
-  trait GetCotacoesIntraday extends GetCommand[Seq[_ <: CotacaoIntraday]] {
+  trait GetCotacoesIntraday extends GetCommand[Seq[_ <: Cotacao]] {
     val acao: Acao
   }
 
-  trait GetHistoricoDiario extends GetCommand[Seq[_ <: CotacaoIntraday]] {
+  trait GetCotacoesInterday extends GetCommand[Seq[_ <: Cotacao]] {
     val acao: Acao
   }
 

@@ -40,7 +40,7 @@ object UOLApp_GetInterdayParaTupy3 extends App {
   val cotacoes = Await.result(cotacoesFuture, timeout)
 
   println(s">> Total cotacoes interday: ${cotacoes.size} para $subject")
-  cotacoes.sorted.foreach(println)
+  cotacoes.sorted.reverse.foreach(println)
 
 }
 

@@ -16,41 +16,19 @@ package object core {
 
     override def compare(that: Acao) =
       this.ticker compareTo that.ticker
-
-  }
-
-  sealed abstract class CotacaoSpec {
-    def acao: Acao
-    def data: Instant
-    def preco: Double
-    def variacao: Double
   }
 
   case class Cotacao(
     acao: Acao,
     data: Instant,
     preco: Double,
-    variacao: Double
-  ) extends CotacaoSpec
-    with Ordered[Cotacao] {
+    maximo: Double,     // option?
+    minimo: Double,     // option?
+    variacao: Double,   // option?
+    volume: Long        // option?
+  ) extends Ordered[Cotacao] {
 
     override def compare(that: Cotacao) =
-      this.data compareTo that.data
-  }
-
-  // FIXME: rename?
-  case class CotacaoIntraday(
-    val acao: Acao,
-    data: Instant,
-    preco: Double,
-    maximo: Double,
-    minimo: Double,
-    variacao: Double,
-    volume: Long
-  ) extends CotacaoSpec
-    with Ordered[CotacaoIntraday] {
-
-    override def compare(that: CotacaoIntraday) =
       this.data compareTo that.data
 
   }
